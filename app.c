@@ -12,6 +12,43 @@ static const GLfloat g_vertex_buffer_data[] = {
     0.0f, 1.0f, 0.0f,
 };
 
+const char gFragmentShader[] = 
+    "precision mediump float;\n"
+    "void main(){\n"
+    "   gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n"
+    "}\n";
+
+const char gVertexShader[] = 
+    "attribute vec4 vPosition;\n"
+    "void main(){\n"
+    "   gl_Position = vPosition;\n"
+    "}\n";
+
+GLuint loadShader(GLenum shaderType, const char* pSource)
+{
+    GLuint shader = glCreateShader(shaderType);
+    glShaderSource(shader, 1, &pSource, NULL);
+    glCompileShader(shader);
+    GLint compiled;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+    return shader;
+}
+
+GLuint createProgram(const char* pVertexSource, const char* pFragmentSource)
+{
+    GLuint vertexShader = loadShader(GL_VERTEX_SHADER, pVertexSource);
+    GLuint fragmentShader = loadShader(GL_FRAGMENT_SHADER, pFragmentSource);
+
+    GLuint program = glCreateProgram();
+    glAttachShader(program, vertexShader);
+    glAttachShader(program, fragmentShader);
+    glLinkProgram(program);
+    GLint linkStatus = GL_FALSE;
+    glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
+    return program;
+
+}
+
 int main(void)
 {
     GLFWwindow* window;
@@ -38,6 +75,7 @@ int main(void)
 
     printf("%s", glGetString(GL_VERSION));
 
+    glViewport(0,0, 640, 480);
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -63,6 +101,10 @@ void render()
     glClearColor(1.0f, 0, 0, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    GLuint gProgram = createProgram(gVertexShader, gFragmentShader);
+    GLuint gvPositionHandle = glGetAttribLocation(gProgram, "vPosition");
+    glUseProgram(gProgram);
+
     glGenBuffers(1, &vertexBuffer);
 
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
@@ -70,10 +112,10 @@ void render()
     glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
     // 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(gvPositionHandle);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glVertexAttribPointer(
-       0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+       gvPositionHandle,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
        3,                  // size
        GL_FLOAT,           // type
        GL_FALSE,           // normalized?
