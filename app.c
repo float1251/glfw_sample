@@ -7,22 +7,25 @@ void render();
 GLint create_shader(char* src, GLenum type);
 
 static const GLfloat g_vertex_buffer_data[] = {
-    -1.0f, -1.0f, 0.0f,
-    1.0f, -1.0f, 0.0f,
-    0.0f, 1.0f, 0.0f,
+    -0.8f, -0.8f, 0.0f,
+    0.8f, -0.8f, 0.0f,
+    0.8f, 0.8f, 0.0f,
+
+    -0.8f, 0.8f, 0.0f,
+    0.8f, 0.8f, 0.0f,
+    -0.8f, -0.8f, 0.0f,
 };
 
 const char gFragmentShader[] = 
+    "uniform float screenWidth;"
     "precision mediump float;\n"
     "void main(){\n"
-    "   gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n"
+    "   gl_FragColor = vec4(gl_FragCoord.x/screenWidth, 1.0, 0.0, 1.0);\n"
     "}\n";
 
 const char gVertexShader[] = 
     "attribute vec4 vPosition;\n"
-    "void main(){\n"
-    "   gl_Position = vPosition;\n"
-    "}\n";
+    "void main(){\n" "   gl_Position = vPosition;\n" "}\n";
 
 GLuint loadShader(GLenum shaderType, const char* pSource)
 {
@@ -113,7 +116,13 @@ void render()
 
     // 1rst attribute buffer : vertices
     glEnableVertexAttribArray(gvPositionHandle);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+
+    // uniform
+    GLint uniform;
+    uniform = glGetUniformLocation(gProgram, "screenWidth");
+    glUniform1f(uniform, 640);
+
+    //glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glVertexAttribPointer(
        gvPositionHandle,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
        3,                  // size
@@ -121,10 +130,11 @@ void render()
        GL_FALSE,           // normalized?
        0,                  // stride
        (void*)0            // array buffer offset
+       //g_vertex_buffer_data
     );
-     
+
     // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
+    glDrawArrays(GL_TRIANGLES, 0, sizeof(g_vertex_buffer_data)/sizeof(g_vertex_buffer_data[0])); // Starting from vertex 0; 3 vertices total -> 1 triangle
      
     glDisableVertexAttribArray(0);
 
