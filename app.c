@@ -17,7 +17,7 @@ static const GLfloat g_vertex_buffer_data[] = {
 };
 
 const char gFragmentShader[] = 
-    "uniform float screenWidth;"
+    "uniform float screenWidth;\n"
     "precision mediump float;\n"
     "void main(){\n"
     "   gl_FragColor = vec4(gl_FragCoord.x/screenWidth, 1.0, 0.0, 1.0);\n"
@@ -25,7 +25,9 @@ const char gFragmentShader[] =
 
 const char gVertexShader[] = 
     "attribute vec4 vPosition;\n"
-    "void main(){\n" "   gl_Position = vPosition;\n" "}\n";
+    "void main(){\n" 
+    "   gl_Position = vPosition;\n" 
+    "}\n";
 
 GLuint loadShader(GLenum shaderType, const char* pSource)
 {
@@ -101,7 +103,7 @@ void render()
 {
     GLuint vertexBuffer;
 
-    glClearColor(1.0f, 0, 0, 1.0f);
+    glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     GLuint gProgram = createProgram(gVertexShader, gFragmentShader);
@@ -136,6 +138,6 @@ void render()
     // Draw the triangle !
     glDrawArrays(GL_TRIANGLES, 0, sizeof(g_vertex_buffer_data)/sizeof(g_vertex_buffer_data[0])); // Starting from vertex 0; 3 vertices total -> 1 triangle
      
-    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(gvPositionHandle);
 
 }
