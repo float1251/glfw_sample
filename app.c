@@ -5,6 +5,7 @@
 
 void render();
 GLint create_shader(char* src, GLenum type);
+int init();
 
 static const GLfloat g_vertex_buffer_data[] = {
     -0.8f, -0.8f, 0.0f,
@@ -54,7 +55,11 @@ GLuint createProgram(const char* pVertexSource, const char* pFragmentSource)
 
 }
 
-int main(void)
+int main(){
+    init();
+}
+
+int init()
 {
     GLFWwindow* window;
 
