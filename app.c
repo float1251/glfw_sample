@@ -1,4 +1,8 @@
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#else
 #include <GLES2/gl2.h>
+#endif
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +23,9 @@ static const GLfloat g_vertex_buffer_data[] = {
 
 const char gFragmentShader[] = 
     "uniform float screenWidth;\n"
+    #ifdef GL_ES
     "precision mediump float;\n"
+    #endif
     "void main(){\n"
     "   gl_FragColor = vec4(gl_FragCoord.x/screenWidth, 1.0, 0.0, 1.0);\n"
     "}\n";
@@ -30,6 +36,79 @@ const char gVertexShader[] =
     "   gl_Position = vPosition;\n" 
     "}\n";
 
+/*
+ シェーダの情報を表示する
+*/
+void printShaderInfoLog(GLuint shader)
+{
+  GLsizei bufSize;
+
+  glGetShaderiv(shader, GL_INFO_LOG_LENGTH , &bufSize);
+
+  if (bufSize > 1) {
+    GLchar *infoLog;
+
+    infoLog = (GLchar *)malloc(bufSize);
+    if (infoLog != NULL) {
+      GLsizei length;
+
+      glGetShaderInfoLog(shader, bufSize, &length, infoLog);
+      fprintf(stderr, "InfoLog:¥n%s¥n¥n", infoLog);
+      free(infoLog);
+    }
+    else
+      fprintf(stderr, "Could not allocate InfoLog buffer.¥n");
+  }
+}
+
+/*
+ プログラムの情報を表示する
+**/
+void printProgramInfoLog(GLuint program)
+{
+  GLsizei bufSize;
+
+  glGetProgramiv(program, GL_INFO_LOG_LENGTH , &bufSize);
+
+  if (bufSize > 1) {
+    GLchar *infoLog;
+
+    infoLog = (GLchar *)malloc(bufSize);
+    if (infoLog != NULL) {
+      GLsizei length;
+
+      glGetProgramInfoLog(program, bufSize, &length, infoLog);
+      fprintf(stderr, "InfoLog:¥n%s¥n¥n", infoLog);
+      free(infoLog);
+    }
+    else
+      fprintf(stderr, "Could not allocate InfoLog buffer.¥n");
+  }
+}
+
+void GetShaderInfoLog(GLuint shader)
+{
+    GLsizei bufSize;
+
+    /* シェーダのコンパイル時のログの長さを取得する */
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH , &bufSize);
+
+    if (bufSize > 1) {
+        GLchar *infoLog = (GLchar *)malloc(bufSize);
+
+        if (infoLog != NULL) {
+            GLsizei length;
+
+            /* シェーダのコンパイル時のログの内容を取得する */
+            glGetShaderInfoLog(shader, bufSize, &length, infoLog);
+            printf("InfoLog:\n%s\n\n", infoLog);
+            free(infoLog);
+        }
+        else
+            printf("Could not allocate InfoLog buffer.\n");
+    }
+}
+
 GLuint loadShader(GLenum shaderType, const char* pSource)
 {
     GLuint shader = glCreateShader(shaderType);
@@ -37,22 +116,75 @@ GLuint loadShader(GLenum shaderType, const char* pSource)
     glCompileShader(shader);
     GLint compiled;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+    if(compiled != GL_TRUE)
+    {
+        printShaderInfoLog(shader);
+    }
     return shader;
 }
 
 GLuint createProgram(const char* pVertexSource, const char* pFragmentSource)
 {
     GLuint vertexShader = loadShader(GL_VERTEX_SHADER, pVertexSource);
+    GetShaderInfoLog(vertexShader);
     GLuint fragmentShader = loadShader(GL_FRAGMENT_SHADER, pFragmentSource);
-
+    GetShaderInfoLog(fragmentShader);
+    
     GLuint program = glCreateProgram();
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragmentShader);
     glLinkProgram(program);
     GLint linkStatus = GL_FALSE;
     glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
+    
+    if(linkStatus != GL_TRUE)
+    {
+        printProgramInfoLog(program);
+        fprintf(stderr, "Link Error\n");
+    }
     return program;
+}
 
+void render()
+{
+    GLuint vertexBuffer;
+
+    glClearColor(0.6f, 0.6f, 0.6f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    GLuint gProgram = createProgram(gVertexShader, gFragmentShader);
+    GLuint gvPositionHandle = glGetAttribLocation(gProgram, "vPosition");
+    glUseProgram(gProgram);
+
+    glGenBuffers(1, &vertexBuffer);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+    // 1rst attribute buffer : vertices
+    glEnableVertexAttribArray(gvPositionHandle);
+
+    // uniform
+    GLint uniform;
+    uniform = glGetUniformLocation(gProgram, "screenWidth");
+    glUniform1f(uniform, 640);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glVertexAttribPointer(
+       gvPositionHandle,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+       3,                  // size
+       GL_FLOAT,           // type
+       GL_FALSE,           // normalized?
+       0,                  // stride
+       (void*)0            // array buffer offset
+       //g_vertex_buffer_data
+    );
+
+    // Draw the triangle !
+    glDrawArrays(GL_TRIANGLES, 0, sizeof(g_vertex_buffer_data)/sizeof(g_vertex_buffer_data[0])); // Starting from vertex 0; 3 vertices total -> 1 triangle
+     
+    glDisableVertexAttribArray(0);
 }
 
 int main(){
@@ -102,47 +234,4 @@ int init()
 
     glfwTerminate();
     return 0;
-}
-
-void render()
-{
-    GLuint vertexBuffer;
-
-    glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    GLuint gProgram = createProgram(gVertexShader, gFragmentShader);
-    GLuint gvPositionHandle = glGetAttribLocation(gProgram, "vPosition");
-    glUseProgram(gProgram);
-
-    glGenBuffers(1, &vertexBuffer);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-
-    // 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(gvPositionHandle);
-
-    // uniform
-    GLint uniform;
-    uniform = glGetUniformLocation(gProgram, "screenWidth");
-    glUniform1f(uniform, 640);
-
-    //glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glVertexAttribPointer(
-       gvPositionHandle,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-       3,                  // size
-       GL_FLOAT,           // type
-       GL_FALSE,           // normalized?
-       0,                  // stride
-       (void*)0            // array buffer offset
-       //g_vertex_buffer_data
-    );
-
-    // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, sizeof(g_vertex_buffer_data)/sizeof(g_vertex_buffer_data[0])); // Starting from vertex 0; 3 vertices total -> 1 triangle
-     
-    glDisableVertexAttribArray(gvPositionHandle);
-
 }
