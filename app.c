@@ -7,43 +7,40 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void render();
-GLint create_shader(char* src, GLenum type);
-int init();
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
 
 static const GLfloat g_vertex_buffer_data[] = {
-    -0.8f, -0.8f, 0.0f,
-    0.8f, -0.8f, 0.0f,
-    0.8f, 0.8f, 0.0f,
-
-    -0.8f, 0.8f, 0.0f,
-    0.8f, 0.8f, 0.0f,
+    -0.8f, -0.8f, 0.0f, 
+    0.8f, -0.8f, 0.0f, 
+    0.8f,  0.8f,  0.0f,
+    -0.8f, 0.8f,  0.0f, 
+    0.8f, 0.8f,  0.0f, 
     -0.8f, -0.8f, 0.0f,
 };
 
-const char gFragmentShader[] = 
+const char gFragmentShader[] =
     "uniform float screenWidth;\n"
-    #ifdef GL_ES
+#ifdef GL_ES
     "precision mediump float;\n"
-    #endif
+#endif
     "void main(){\n"
     "   gl_FragColor = vec4(gl_FragCoord.x/screenWidth, 1.0, 0.0, 1.0);\n"
     "}\n";
 
-const char gVertexShader[] = 
+const char gVertexShader[] =
     "attribute vec4 vPosition;\n"
-    "void main(){\n" 
-    "   gl_Position = vPosition;\n" 
+    "void main(){\n"
+    "   gl_Position = vPosition;\n"
     "}\n";
 
 /*
  シェーダの情報を表示する
 */
-void printShaderInfoLog(GLuint shader)
-{
+void printShaderInfoLog(GLuint shader) {
   GLsizei bufSize;
 
-  glGetShaderiv(shader, GL_INFO_LOG_LENGTH , &bufSize);
+  glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &bufSize);
 
   if (bufSize > 1) {
     GLchar *infoLog;
@@ -51,12 +48,10 @@ void printShaderInfoLog(GLuint shader)
     infoLog = (GLchar *)malloc(bufSize);
     if (infoLog != NULL) {
       GLsizei length;
-
       glGetShaderInfoLog(shader, bufSize, &length, infoLog);
       fprintf(stderr, "InfoLog:¥n%s¥n¥n", infoLog);
       free(infoLog);
-    }
-    else
+    } else
       fprintf(stderr, "Could not allocate InfoLog buffer.¥n");
   }
 }
@@ -64,15 +59,13 @@ void printShaderInfoLog(GLuint shader)
 /*
  プログラムの情報を表示する
 **/
-void printProgramInfoLog(GLuint program)
-{
+void printProgramInfoLog(GLuint program) {
   GLsizei bufSize;
 
-  glGetProgramiv(program, GL_INFO_LOG_LENGTH , &bufSize);
+  glGetProgramiv(program, GL_INFO_LOG_LENGTH, &bufSize);
 
   if (bufSize > 1) {
     GLchar *infoLog;
-
     infoLog = (GLchar *)malloc(bufSize);
     if (infoLog != NULL) {
       GLsizei length;
@@ -80,158 +73,143 @@ void printProgramInfoLog(GLuint program)
       glGetProgramInfoLog(program, bufSize, &length, infoLog);
       fprintf(stderr, "InfoLog:¥n%s¥n¥n", infoLog);
       free(infoLog);
-    }
-    else
+    } else
       fprintf(stderr, "Could not allocate InfoLog buffer.¥n");
   }
 }
 
-void GetShaderInfoLog(GLuint shader)
-{
-    GLsizei bufSize;
+void GetShaderInfoLog(GLuint shader) {
+  GLsizei bufSize;
 
-    /* シェーダのコンパイル時のログの長さを取得する */
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH , &bufSize);
+  /* シェーダのコンパイル時のログの長さを取得する */
+  glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &bufSize);
 
-    if (bufSize > 1) {
-        GLchar *infoLog = (GLchar *)malloc(bufSize);
+  if (bufSize > 1) {
+    GLchar *infoLog = (GLchar *)malloc(bufSize);
 
-        if (infoLog != NULL) {
-            GLsizei length;
+    if (infoLog != NULL) {
+      GLsizei length;
 
-            /* シェーダのコンパイル時のログの内容を取得する */
-            glGetShaderInfoLog(shader, bufSize, &length, infoLog);
-            printf("InfoLog:\n%s\n\n", infoLog);
-            free(infoLog);
-        }
-        else
-            printf("Could not allocate InfoLog buffer.\n");
-    }
+      /* シェーダのコンパイル時のログの内容を取得する */
+      glGetShaderInfoLog(shader, bufSize, &length, infoLog);
+      printf("InfoLog:\n%s\n\n", infoLog);
+      free(infoLog);
+    } else
+      printf("Could not allocate InfoLog buffer.\n");
+  }
 }
 
-GLuint loadShader(GLenum shaderType, const char* pSource)
-{
-    GLuint shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, &pSource, NULL);
-    glCompileShader(shader);
-    GLint compiled;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-    if(compiled != GL_TRUE)
-    {
-        printShaderInfoLog(shader);
-    }
-    return shader;
+GLuint loadShader(GLenum shaderType, const char *pSource) {
+  GLuint shader = glCreateShader(shaderType);
+  glShaderSource(shader, 1, &pSource, NULL);
+  glCompileShader(shader);
+  GLint compiled;
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+  if (compiled != GL_TRUE) {
+    printShaderInfoLog(shader);
+  }
+  return shader;
 }
 
-GLuint createProgram(const char* pVertexSource, const char* pFragmentSource)
-{
-    GLuint vertexShader = loadShader(GL_VERTEX_SHADER, pVertexSource);
-    GetShaderInfoLog(vertexShader);
-    GLuint fragmentShader = loadShader(GL_FRAGMENT_SHADER, pFragmentSource);
-    GetShaderInfoLog(fragmentShader);
-    
-    GLuint program = glCreateProgram();
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    glLinkProgram(program);
-    GLint linkStatus = GL_FALSE;
-    glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
-    
-    if(linkStatus != GL_TRUE)
-    {
-        printProgramInfoLog(program);
-        fprintf(stderr, "Link Error\n");
-    }
-    return program;
+GLuint createProgram(const char *pVertexSource, const char *pFragmentSource) {
+  GLuint vertexShader = loadShader(GL_VERTEX_SHADER, pVertexSource);
+  GetShaderInfoLog(vertexShader);
+  GLuint fragmentShader = loadShader(GL_FRAGMENT_SHADER, pFragmentSource);
+  GetShaderInfoLog(fragmentShader);
+
+  GLuint program = glCreateProgram();
+  glAttachShader(program, vertexShader);
+  glAttachShader(program, fragmentShader);
+  glLinkProgram(program);
+  GLint linkStatus = GL_FALSE;
+  glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
+
+  if (linkStatus != GL_TRUE) {
+    printProgramInfoLog(program);
+    fprintf(stderr, "Link Error\n");
+  }
+  return program;
 }
 
-void render()
-{
-    GLuint vertexBuffer;
+void render() {
+  GLuint vertexBuffer;
 
-    glClearColor(0.6f, 0.6f, 0.6f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+  glClearColor(0.6f, 0.6f, 0.6f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
 
-    GLuint gProgram = createProgram(gVertexShader, gFragmentShader);
-    GLuint gvPositionHandle = glGetAttribLocation(gProgram, "vPosition");
-    glUseProgram(gProgram);
+  GLuint gProgram = createProgram(gVertexShader, gFragmentShader);
+  GLuint gvPositionHandle = glGetAttribLocation(gProgram, "vPosition");
+  glUseProgram(gProgram);
 
-    glGenBuffers(1, &vertexBuffer);
+  glGenBuffers(1, &vertexBuffer);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data),
+               g_vertex_buffer_data, GL_STATIC_DRAW);
 
-    // 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(gvPositionHandle);
+  // 1rst attribute buffer : vertices
+  glEnableVertexAttribArray(gvPositionHandle);
 
-    // uniform
-    GLint uniform;
-    uniform = glGetUniformLocation(gProgram, "screenWidth");
-    glUniform1f(uniform, 640);
+  // uniform
+  GLint uniform;
+  uniform = glGetUniformLocation(gProgram, "screenWidth");
+  glUniform1f(uniform, SCREEN_WIDTH);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glVertexAttribPointer(
-       gvPositionHandle,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-       3,                  // size
-       GL_FLOAT,           // type
-       GL_FALSE,           // normalized?
-       0,                  // stride
-       (void*)0            // array buffer offset
-       //g_vertex_buffer_data
-    );
+  glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+  glVertexAttribPointer(gvPositionHandle,  // attribute 0. No particular reason
+                        3,                 // size
+                        GL_FLOAT,          // type
+                        GL_FALSE,          // normalized?
+                        0,                 // stride
+                        (void *)0          // array buffer offset
+                        );
 
-    // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, sizeof(g_vertex_buffer_data)/sizeof(g_vertex_buffer_data[0])); // Starting from vertex 0; 3 vertices total -> 1 triangle
-     
-    glDisableVertexAttribArray(0);
+  // Draw the triangle !
+  glDrawArrays(
+      GL_LINE_STRIP, 0,
+      sizeof(g_vertex_buffer_data) / sizeof(g_vertex_buffer_data[0]) /
+          3);  // Starting from vertex 0; 3 vertices total -> 1 triangle
+
+  glDisableVertexAttribArray(0);
 }
 
-int main(){
-    init();
-}
+int init() {
+  GLFWwindow *window;
 
-int init()
-{
-    GLFWwindow* window;
+  /* Initialize the library */
+  if (!glfwInit()) return -1;
 
-    /* Initialize the library */
-    if (!glfwInit())
-        return -1;
+  // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);  // yes, 3 and 2!!!
+  // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+  // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);  // yes, 3 and 2!!!
-    // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
-
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
-
-    printf("%s", glGetString(GL_VERSION));
-
-    glViewport(0,0, 640, 480);
-
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
-        /* Render here */
-        render();
-
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
-
-        /* Poll for and process events */
-        glfwPollEvents();
-    }
-
+  /* Create a windowed mode window and its OpenGL context */
+  window =
+      glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello World", NULL, NULL);
+  if (!window) {
     glfwTerminate();
-    return 0;
+    return -1;
+  }
+
+  /* Make the window's context current */
+  glfwMakeContextCurrent(window);
+  printf("%s", glGetString(GL_VERSION));
+  glViewport(0, 0, 640, 480);
+
+  /* Loop until the user closes the window */
+  while (!glfwWindowShouldClose(window)) {
+    /* Render here */
+    render();
+    /* Swap front and back buffers */
+    glfwSwapBuffers(window);
+    /* Poll for and process events */
+    glfwPollEvents();
+  }
+
+  glfwTerminate();
+  return 0;
 }
+
+int main() { init(); }
