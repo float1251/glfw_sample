@@ -1,7 +1,5 @@
 app
-<<<<<<< Updated upstream
 app.o
-=======
 a.out
 app.dSYM
->>>>>>> Stashed changes
+gl.log
