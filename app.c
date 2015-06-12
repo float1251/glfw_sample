@@ -2,10 +2,12 @@
 #include <OpenGL/gl.h>
 #else
 #include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #endif
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <gl_log.h>
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -46,6 +48,7 @@ void printShaderInfoLog(GLuint shader) {
     GLchar *infoLog;
 
     infoLog = (GLchar *)malloc(bufSize);
+    
     if (infoLog != NULL) {
       GLsizei length;
       glGetShaderInfoLog(shader, bufSize, &length, infoLog);
@@ -197,6 +200,8 @@ int init() {
   glfwMakeContextCurrent(window);
   printf("%s", glGetString(GL_VERSION));
   glViewport(0, 0, 640, 480);
+
+  gl_log("%s", "aaa");
 
   /* Loop until the user closes the window */
   while (!glfwWindowShouldClose(window)) {

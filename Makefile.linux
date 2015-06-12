@@ -1,2 +1,2 @@
 all:
-	cc `pkg-config glfw3 --cflags` -o app app.c  `pkg-config glesv2 gl --libs` `pkg-config glfw3 --static --libs`
+	cc `pkg-config glfw3 --cflags` -o app app.c gl_log.c  `pkg-config glesv2 gl --libs` `pkg-config glfw3 --static --libs` -I./
