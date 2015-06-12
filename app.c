@@ -7,7 +7,7 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <gl_log.h>
+#include "gl_log.h"
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -35,6 +35,14 @@ const char gVertexShader[] =
     "void main(){\n"
     "   gl_Position = vPosition;\n"
     "}\n";
+
+void glfw_error_callback(int error, const char* description) {
+    gl_log_error("GLFE ERROR: code %i\nmsg: %s\n", error, description);
+}
+
+void glfw_window_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+}
 
 /*
  シェーダの情報を表示する
@@ -198,10 +206,11 @@ int init() {
 
   /* Make the window's context current */
   glfwMakeContextCurrent(window);
-  printf("%s", glGetString(GL_VERSION));
+  gl_log("%s\n", glGetString(GL_VERSION));
   glViewport(0, 0, 640, 480);
 
-  gl_log("%s", "aaa");
+  glfwSetErrorCallback(glfw_error_callback);
+  glfwSetWindowSizeCallback(window, glfw_window_size_callback);
 
   /* Loop until the user closes the window */
   while (!glfwWindowShouldClose(window)) {

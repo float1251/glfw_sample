@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <stdbool.h>
-#include <gl_log.h>
+#include "gl_log.h"
 
 #define GL_LOG_FILE "gl.log"
 
