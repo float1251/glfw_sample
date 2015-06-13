@@ -21,20 +21,70 @@ static const GLfloat g_vertex_buffer_data[] = {
     -0.8f, -0.8f, 0.0f,
 };
 
+static const GLfloat colors[] = {
+    1.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 1.0f,
+    
+    1.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 1.0f
+};
+
+typedef struct {
+    GLuint vertexBuffer;
+    GLuint attribLocation;
+    int size;
+} VBOData;
+
+void setAttribute(VBOData data[]) {
+    int i;
+    int length = sizeof(data)/ sizeof(data[0]);
+    for(i=0; i<length; i++) {
+        VBOData d = data[i];
+        glBindBuffer(GL_ARRAY_BUFFER, d.vertexBuffer);
+        glEnableVertexAttribArray(d.attribLocation);
+        glVertexAttribPointer(d.attribLocation, d.size, GL_FLOAT, GL_FALSE, 0, 0);
+    }
+}
+
 const char gFragmentShader[] =
     "uniform float screenWidth;\n"
 #ifdef GL_ES
     "precision mediump float;\n"
 #endif
+    "varying vec4 color;\n"
     "void main(){\n"
-    "   gl_FragColor = vec4(gl_FragCoord.x/screenWidth, 1.0, 0.0, 1.0);\n"
+    //"   gl_FragColor = vec4(gl_FragCoord.x/screenWidth, 1.0, 0.0, 1.0);\n"
+    "    gl_FragColor = color;\n"
     "}\n";
 
 const char gVertexShader[] =
     "attribute vec4 vPosition;\n"
+    "attribute vec4 vColor;\n"
+    "varying vec4 color;\n"
     "void main(){\n"
     "   gl_Position = vPosition;\n"
+    "   color = vColor;\n"
     "}\n";
+
+int frame_count;
+double previous_seconds;
+void _update_fps_counter(GLFWwindow* window) {
+    double current_seconds;
+    double elapsed_seconds;
+    current_seconds = glfwGetTime();
+    elapsed_seconds = current_seconds - previous_seconds;
+    if(elapsed_seconds > 0.25) {
+        previous_seconds = current_seconds;
+        char tmp[128];
+        double fps = (double)frame_count / elapsed_seconds;
+        sprintf(tmp, "opengl @ fps: %.2f", fps);
+        glfwSetWindowTitle(window, tmp);
+        frame_count = 0;
+    }
+    frame_count++;
+}
 
 void glfw_error_callback(int error, const char* description) {
     gl_log_error("GLFE ERROR: code %i\nmsg: %s\n", error, description);
@@ -142,6 +192,8 @@ GLuint createProgram(const char *pVertexSource, const char *pFragmentSource) {
   return program;
 }
 
+
+
 void render() {
   GLuint vertexBuffer;
 
@@ -153,11 +205,10 @@ void render() {
   glUseProgram(gProgram);
 
   glGenBuffers(1, &vertexBuffer);
-
   glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data),
                g_vertex_buffer_data, GL_STATIC_DRAW);
+
 
   // 1rst attribute buffer : vertices
   glEnableVertexAttribArray(gvPositionHandle);
@@ -176,13 +227,23 @@ void render() {
                         (void *)0          // array buffer offset
                         );
 
+  // color vbo
+  GLuint colors_vbo = 0;
+  glGenBuffers(1, &colors_vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+  GLuint gvColorHandle = glGetAttribLocation(gProgram, "vColor");
+
+  glEnableVertexAttribArray(gvColorHandle);
+  glBindBuffer(GL_ARRAY_BUFFER, colors_vbo);
+  glVertexAttribPointer(gvColorHandle, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
   // Draw the triangle !
   glDrawArrays(
-      GL_LINE_STRIP, 0,
+      GL_TRIANGLES, 0,
       sizeof(g_vertex_buffer_data) / sizeof(g_vertex_buffer_data[0]) /
           3);  // Starting from vertex 0; 3 vertices total -> 1 triangle
 
-  glDisableVertexAttribArray(0);
 }
 
 int init() {
@@ -214,6 +275,7 @@ int init() {
 
   /* Loop until the user closes the window */
   while (!glfwWindowShouldClose(window)) {
+    _update_fps_counter(window);
     /* Render here */
     render();
     /* Swap front and back buffers */
