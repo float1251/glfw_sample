@@ -7,6 +7,8 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
+#include <time.h>
 #include "gl_log.h"
 
 #define SCREEN_WIDTH 640
@@ -16,9 +18,9 @@ static const GLfloat g_vertex_buffer_data[] = {
     -0.8f, -0.8f, 0.0f, 
     0.8f, -0.8f, 0.0f, 
     0.8f,  0.8f,  0.0f,
-    -0.8f, 0.8f,  0.0f, 
-    0.8f, 0.8f,  0.0f, 
-    -0.8f, -0.8f, 0.0f,
+//    -0.8f, 0.8f,  0.0f, 
+//    0.8f, 0.8f,  0.0f, 
+//    -0.8f, -0.8f, 0.0f,
 };
 
 static const GLfloat colors[] = {
@@ -26,9 +28,9 @@ static const GLfloat colors[] = {
     0.0f, 1.0f, 0.0f,
     0.0f, 0.0f, 1.0f,
     
-    1.0f, 0.0f, 0.0f,
-    0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 1.0f
+//    1.0f, 0.0f, 0.0f,
+//    0.0f, 1.0f, 0.0f,
+//    0.0f, 0.0f, 1.0f
 };
 
 typedef struct {
@@ -62,9 +64,10 @@ const char gFragmentShader[] =
 const char gVertexShader[] =
     "attribute vec4 vPosition;\n"
     "attribute vec4 vColor;\n"
+    "uniform mat4 matrix;\n"
     "varying vec4 color;\n"
     "void main(){\n"
-    "   gl_Position = vPosition;\n"
+    "   gl_Position = matrix * vPosition;\n"
     "   color = vColor;\n"
     "}\n";
 
@@ -192,8 +195,6 @@ GLuint createProgram(const char *pVertexSource, const char *pFragmentSource) {
   return program;
 }
 
-
-
 void render() {
   GLuint vertexBuffer;
 
@@ -217,6 +218,18 @@ void render() {
   GLint uniform;
   uniform = glGetUniformLocation(gProgram, "screenWidth");
   glUniform1f(uniform, SCREEN_WIDTH);
+
+  // Rotation Matrix
+  float mag = 0.5f;
+  float matrix[] = {
+    mag, 0, 0, 0,
+    0, mag, 0, 0,
+    0, 0, mag, 0,
+    0, 0, 0, 1
+  };
+  GLint matrix_uniform;
+  matrix_uniform = glGetUniformLocation(gProgram, "matrix");
+  glUniformMatrix4fv(matrix_uniform, 1, GL_FALSE, matrix);
 
   glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
   glVertexAttribPointer(gvPositionHandle,  // attribute 0. No particular reason
