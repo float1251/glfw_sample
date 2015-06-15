@@ -10,6 +10,7 @@
 #include <math.h>
 #include <time.h>
 #include "gl_log.h"
+#include "matrix4f.h"
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -221,12 +222,10 @@ void render() {
 
   // Rotation Matrix
   float mag = 0.5f;
-  float matrix[] = {
-    mag, 0, 0, 0,
-    0, mag, 0, 0,
-    0, 0, mag, 0,
-    0, 0, 0, 1
-  };
+  float matrix[16];
+  Matrix4f_create(matrix);
+  //Matrix4f_rotateZ(matrix, 1);
+  Matrix4f_scale(matrix, 0.25f);
   GLint matrix_uniform;
   matrix_uniform = glGetUniformLocation(gProgram, "matrix");
   glUniformMatrix4fv(matrix_uniform, 1, GL_FALSE, matrix);
