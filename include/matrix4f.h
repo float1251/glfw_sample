@@ -7,7 +7,8 @@
 
 void Matrix4f_mul(float mata[16], float matb[16], float out[16]);
 void Matrix4f_create(float out[16]);
-void Matrix4f_identity(float out[16], float val);
+void Matrix4f_identify(float mat[16]);
+void Matrix4f_identifyValue(float mat[16], float val);
 void Matrix4f_rotateX(float out[16], float angle);
 void Matrix4f_rotateY(float out[16], float angle);
 void Matrix4f_rotateZ(float out[16], float angle);

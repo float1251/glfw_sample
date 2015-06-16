@@ -65,10 +65,11 @@ const char gFragmentShader[] =
 const char gVertexShader[] =
     "attribute vec4 vPosition;\n"
     "attribute vec4 vColor;\n"
-    "uniform mat4 matrix;\n"
+    "uniform mat4 mvMatrix;\n"
+    "uniform mat4 pMatrix;\n"
     "varying vec4 color;\n"
     "void main(){\n"
-    "   gl_Position = matrix * vPosition;\n"
+    "   gl_Position = pMatrix * mvMatrix * vPosition;\n"
     "   color = vColor;\n"
     "}\n";
 
@@ -211,7 +212,6 @@ void render() {
   glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data),
                g_vertex_buffer_data, GL_STATIC_DRAW);
 
-
   // 1rst attribute buffer : vertices
   glEnableVertexAttribArray(gvPositionHandle);
 
@@ -222,17 +222,20 @@ void render() {
 
   // Rotation Matrix
   float mag = 0.5f;
-  float matrix[16];
-  Matrix4f_create(matrix);
-  matrix[0] = 1;
-  matrix[5] = 1;
-  matrix[10] = 1;
-  matrix[15] = 1;
-  //Matrix4f_rotateZ(matrix, 1);
-  //Matrix4f_scale(matrix, 0.25f);
-  GLint matrix_uniform;
-  matrix_uniform = glGetUniformLocation(gProgram, "matrix");
-  glUniformMatrix4fv(matrix_uniform, 1, GL_FALSE, matrix);
+  float modelViewMatrix[16], projectionMatrix[16];
+  // ModelViewMatrix
+  Matrix4f_create(modelViewMatrix);
+  Matrix4f_identify(modelViewMatrix);
+  Matrix4f_scale(modelViewMatrix, 0.5f);
+  //Matrix4f_rotateZ(modelViewMatrix, 20);
+  Matrix4f_create(projectionMatrix);
+  Matrix4f_identify(projectionMatrix);
+
+  GLint mv_matrix_uniform, projection_matrix_uniform;
+  mv_matrix_uniform = glGetUniformLocation(gProgram, "mvMatrix");
+  projection_matrix_uniform = glGetUniformLocation(gProgram, "pMatrix");
+  glUniformMatrix4fv(mv_matrix_uniform, 1, GL_FALSE, modelViewMatrix);
+  glUniformMatrix4fv(projection_matrix_uniform, 1, GL_FALSE, projectionMatrix);
 
   glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
   glVertexAttribPointer(gvPositionHandle,  // attribute 0. No particular reason
