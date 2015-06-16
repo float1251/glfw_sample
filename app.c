@@ -227,7 +227,7 @@ void render() {
   Matrix4f_create(modelViewMatrix);
   Matrix4f_identify(modelViewMatrix);
   Matrix4f_scale(modelViewMatrix, 0.5f);
-  //Matrix4f_rotateZ(modelViewMatrix, 20);
+  Matrix4f_rotateZ(modelViewMatrix, 20);
   Matrix4f_create(projectionMatrix);
   Matrix4f_identify(projectionMatrix);
 

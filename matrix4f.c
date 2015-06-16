@@ -84,7 +84,8 @@ void  Matrix4f_create(float out[16]) {
 void Matrix4f_rotateZ(float out[16], float angle) {
     float mat[16], matb[16];
     Matrix4f_create(mat);
-    mat[M00] = cos(angle); mat[1] = sin(angle);
+    mat[M00] = cos(angle); 
+    mat[M01] = sin(angle);
     mat[M04] = -sin(angle);
     mat[M05] = cos(angle);
     mat[M10] = 1;
