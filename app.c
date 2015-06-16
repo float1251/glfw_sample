@@ -1,6 +1,6 @@
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
-#else
+#else 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #endif
@@ -224,8 +224,12 @@ void render() {
   float mag = 0.5f;
   float matrix[16];
   Matrix4f_create(matrix);
+  matrix[0] = 1;
+  matrix[5] = 1;
+  matrix[10] = 1;
+  matrix[15] = 1;
   //Matrix4f_rotateZ(matrix, 1);
-  Matrix4f_scale(matrix, 0.25f);
+  //Matrix4f_scale(matrix, 0.25f);
   GLint matrix_uniform;
   matrix_uniform = glGetUniformLocation(gProgram, "matrix");
   glUniformMatrix4fv(matrix_uniform, 1, GL_FALSE, matrix);
@@ -279,7 +283,6 @@ int init() {
 
   /* Make the window's context current */
   glfwMakeContextCurrent(window);
-  gl_log("%s\n", glGetString(GL_VERSION));
   glViewport(0, 0, 640, 480);
 
   glfwSetErrorCallback(glfw_error_callback);
