@@ -13,5 +13,5 @@ void Matrix4f_rotateX(float out[16], float angle);
 void Matrix4f_rotateY(float out[16], float angle);
 void Matrix4f_rotateZ(float out[16], float angle);
 void Matrix4f_scale(float out[16], float scale);
-
+void Matrix4f_translate(float out[16], float x, float y, float z);
 #endif

@@ -209,8 +209,7 @@ void render() {
 
   glGenBuffers(1, &vertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data),
-               g_vertex_buffer_data, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data),g_vertex_buffer_data, GL_STATIC_DRAW);
 
   // 1rst attribute buffer : vertices
   glEnableVertexAttribArray(gvPositionHandle);
@@ -221,13 +220,13 @@ void render() {
   glUniform1f(uniform, SCREEN_WIDTH);
 
   // Rotation Matrix
-  float mag = 0.5f;
   float modelViewMatrix[16], projectionMatrix[16];
   // ModelViewMatrix
   Matrix4f_create(modelViewMatrix);
   Matrix4f_identify(modelViewMatrix);
   Matrix4f_scale(modelViewMatrix, 0.5f);
   Matrix4f_rotateZ(modelViewMatrix, 20);
+  Matrix4f_translate(modelViewMatrix, 1, 1, 0);
   Matrix4f_create(projectionMatrix);
   Matrix4f_identify(projectionMatrix);
 

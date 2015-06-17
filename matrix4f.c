@@ -103,3 +103,14 @@ void Matrix4f_scale(float out[16], float scale) {
     copy(out, cpy);
     Matrix4f_mul(cpy, mat, out);
 }
+
+void Matrix4f_translate(float out[16], float x, float y, float z) {
+    float mat[16], cpy[16];
+    Matrix4f_create(mat);
+    Matrix4f_identify(mat);
+    mat[M03] = x;
+    mat[M07] = y;
+    mat[M11] = z;
+    copy(out, cpy);
+    Matrix4f_mul(cpy, mat, out);
+}
